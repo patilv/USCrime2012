@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Visualization of 2012 Crime Rates of Different States in the US</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width">
+  <link rel="icon" type="image/png" href="favicon.ico">
+  <style>
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+  </style>
+  
+<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/css/bootstrap.no-responsive.no-icons.min.css" rel="stylesheet">
+<!-- <link rel="stylesheet" href="/css/bootstrap.min.css"> -->
+<link  rel="stylesheet" 
+    href="http://netdna.bootstrapcdn.com/font-awesome/2.0/css/font-awesome.css">
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/bootstrap/css/bootstrap-responsive.min.css">
+  
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/bootstrap/css/main.css">
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/bootstrap/js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/bootstrap/js/vendor/jquery-1.8.2.min.js"><\/script>')</script>
+    <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+</head>
+<body>
+   <!--[if lt IE 7]>
+     <p class="chromeframe">You are using an outdated browser. 
+       <a href="http://browsehappy.com/">Upgrade your browser today</a> or 
+       <a href="http://www.google.com/chromeframe/?redirect=true"> 
+         install Google Chrome Frame
+       </a> to better experience this site.
+    </p>
+   <![endif]-->
+   <!-- Ref: http://twitter.github.com/bootstrap/examples/hero.html -->
+   
+    <div class="container">
+      
+<pre><code class="r"># Read the csv file
+cData = read.csv(&quot;USCrime2012.csv&quot;)
+dim(cData)
+</code></pre>
+
+<p>[1] 50 10</p>
+
+<pre><code class="r">names(cData)
+</code></pre>
+
+<p>[1] &quot;State&quot;                          &quot;ViolentCrime&quot;<br>
+ [3] &quot;MurderNonNegligentManslaughter&quot; &quot;ForcibleRape&quot;<br>
+ [5] &quot;Robbery&quot;                        &quot;AggravatedAssault&quot;<br>
+ [7] &quot;PropertyCrime&quot;                  &quot;Burglary&quot;<br>
+ [9] &quot;LarcenyTheft&quot;                   &quot;MotorVehicleTheft&quot;             </p>
+
+<p>Crime rates (per 100,000 people) for 9 different types of crimes are present for each of the 50 US States. </p>
+
+<h4>Distribution of each crime type across States</h4>
+
+<p>In this chart, you can select a particular crime and the corresponding numbers for different States. You should be able to hover over the bars to get the exact numbers.</p>
+
+<pre><code class="r">library(rCharts)  # nvd3 plot through rCharts
+crimebarPlots = nPlot(ViolentCrime ~ State, data = cData, type = &quot;discreteBarChart&quot;)
+crimebarPlots$xAxis(rotateLabels = -90)
+crimebarPlots$addControls(&quot;y&quot;, value = &quot;ViolentCrime&quot;, values = names(cData[, 
+    -1]))
+# crimebarPlots$save(&#39;crimebarPlots.html&#39;,cdn=T)
+# crimebarPlots$publish(&#39;crimebarplot&#39;,host=&#39;gist&#39;)
+</code></pre>
+
+<iframe height="675" src="http://www.pagist.info/7968124" width="1300"></iframe>
+
+<h4>Which States had higher rates of different types of crimes?</h4>
+
+<p>The heatmap below provides a clue to answering this question. Along the columns are different crimes (you don&#39;t see all labels but if you hover over the rectangle tiles, you should see the crime identified) and along the rows are different States. Values for individual crimes are scaled to a 0 to 1 scale, thereby permitting a visualization of all variables in a better manner. Higher the value for a crime, higher the intensity of red and the scaled value will be closer to 1. Lower the value for a crime, lower the intensity of the red--- or white if crime rate is zero.</p>
+
+<pre><code class="r">library(plyr)
+library(scales)
+library(reshape2)
+statemelt = ddply(melt(cData), .(variable), transform, rescale = rescale(value))
+names(statemelt) = c(&quot;State&quot;, &quot;Crime&quot;, &quot;value&quot;, &quot;rescale&quot;)
+hmap &lt;- rPlot(State ~ Crime, color = &quot;rescale&quot;, data = statemelt, type = &quot;tile&quot;)  #polycharts
+hmap$addParams(height = 600, width = 1000)
+hmap$guides(reduceXTicks = FALSE)
+hmap$guides(&quot;{color: {scale: {type: gradient, lower: white, upper: red}}}&quot;)
+hmap$guides(y = list(numticks = length(unique(statemelt$State))))
+# hmap$save(&#39;heatmapstate.html&#39;,cdn=T) hmap$publish(&#39;heatmap&#39;,host=&#39;gist&#39;)
+</code></pre>
+
+<iframe src="http://www.pagist.info/7968137" width=1250 height=650> </iframe>
+
+<p>Few crimes (e.g., forcible rape and murder and nonnegligent manslaughter) seem to have a higher rate in few States and relatively lower rate in others. Others (e.g., larceny theft or property crime) appear to be distributed more uniformly across many States. </p>
+
+<h4>Relationship between different types of crimes?</h4>
+
+<p>The correlation matrix given below provides some information regarding this. It tells us how related two crimes are to each other. The correlation coefficient, a measure of this relationship, can vary from -1 through +1. A negative coefficient indicates indicates a negative relationship (in red or a shade of red) between the two variables, whereas a positive coefficient indicates that there is a good chance of finding both crimes together.</p>
+
+<pre><code class="r">corrmatrix = cor(cData[c(-1)])  #store corr matrix
+corrdata = as.data.frame(corrmatrix)
+corrdata$Variable1 = names(corrdata)
+corrdatamelt = melt(corrdata, id = &quot;Variable1&quot;)
+names(corrdatamelt) = c(&quot;Variable1&quot;, &quot;Variable2&quot;, &quot;CorrelationCoefficient&quot;)
+corrmatplot = rPlot(Variable2 ~ Variable1, color = &quot;CorrelationCoefficient&quot;, 
+    data = corrdatamelt, type = &quot;tile&quot;, height = 600)
+corrmatplot$addParams(height = 450, width = 1000)
+corrmatplot$guides(&quot;{color: {scale: {type: gradient2, lower: &#39;red&#39;,  middle: &#39;white&#39;, upper: &#39;blue&#39;,midpoint: 0}}}&quot;)
+corrmatplot$guides(y = list(numticks = length(unique(corrdatamelt$Variable1))))
+# corrmatplot$save(&#39;corrmatplotstate.html&#39;,cdn=T)
+# corrmatplot$publish(&#39;corrmat&#39;,host=&#39;gist&#39;)
+</code></pre>
+
+<iframe src="http://www.pagist.info/7968148" width=1200 height=500> </iframe>
+
+<h4>Classification of different States into groups based on their rates of different crimes</h4>
+
+<p>This can be done using k-means clustering. How many clusters to go with? </p>
+
+<pre><code class="r"># Determining number of clusters - Code from Tal Galili&#39;s post based on
+# Kabacoff&#39;s book -
+# http://www.r-statistics.com/2013/08/k-means-clustering-from-r-in-action/
+wssplot &lt;- function(data, nc = 10, seed = 1234) {
+    wss &lt;- (nrow(data) - 1) * sum(apply(data, 2, var))
+    for (i in 2:nc) {
+        set.seed(seed)
+        wss[i] &lt;- sum(kmeans(data, centers = i)$withinss)
+    }
+    plot(1:nc, wss, type = &quot;b&quot;, xlab = &quot;Number of Clusters&quot;, ylab = &quot;Within Groups sum of squares&quot;)
+}
+wssplot(cData[, -1])
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-5"> </p>
+
+<pre><code class="r">######## 
+library(NbClust)
+set.seed(123)
+nc &lt;- NbClust(cData[, -1], min.nc = 2, max.nc = 10, method = &quot;kmeans&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfgAAAH4CAMAAACR9g9NAAAApVBMVEX9/v0AAAAAADkAAGUAAP8AOTkAOWUAOY8AZo8AZrU5AAA5ADk5AGU5OWU5OY85ZrU5j485j9plAABlADllAGVlOQBlOY9lZgBlZjllZmVltbVltf2POQCPOTmPOWWPZgCPjzmPj2WPtY+P29qP2/21ZgC1Zjm1tWW124+1/tq1/v3ajznatWXa24/a/rXa/tra/v39tWX924/9/rX9/tr9/v3/AABVGNsSAAAAN3RSTlP//////////////////////////////////////////////////////////////////////wD/rn+PdAAAAAlwSFlzAAALEgAACxIB0t1+/AAAF8VJREFUeJztnQl748hxhg0NkzGV8dqUdzexpdnE3mHsiLEzpAT9/58WNC4CJKqv6kZXo7/3mZHEA4UuvuwDZ/+mBkXym9QFAGmA+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EKB+EJxE//2VD3X9fvLp1erN396Vf+JFz9/H950E5EOf3y+lqNqlx+f6V+er+/uCWOJ+7C2bx9yqBTPfTaXx+rhW/vDOpKeIZbPZ3Wff19qZ/HNUg7iNS+6iz9Wz2MxGvaTZ2Yvk08YC9yHtX7/THx1mKzWdd06hlhenxVVamfxTXrd2k5dqu8vD/9RPfyl+u1L9en11H7vz80rzVd0qPHn4VM5ddWiWaSq/nwnvo2qStX88be+5vVLtOuorlYuj5+/Nwv+z0v7TLe69/bBUOUqFW98Qv1p8V3tw77OS9ouOCaritaV+DaHc9Wm2xbqX3+q2gym5W8+kfHhNMoY/7ktwqSk3UrbPNoV+XxWapmlUp9cxX/69361xz54V67/rQZU9lVb1Jn4cYk+k6FNXUxmeH22RPthDuJHLUpt++7/Gz3fPdEFNJvvw9Y3Jb1NdvLHNAdVyW7Ez+LcPLxGmXw0w0c3KcXeIN7wWV3zn5X6WDmL//vjQa328tjW6bam7buvu/rc1DPD+iZ9/Kn5RFV9qrtFm+dO1byZnCdzaEOPS3TruDZfbQIq8KwRVA/UH+1idf/+7on+VQND2HlJmwWnyR6aXD9/v8lhSHIsR/vjpvzTh5MobfxxhdchxrjSSZbun1Uv/qbUzbudxb8eH359UdV43+XaNC3flPh9vw71SJVwKv7yuO86gLZRbhe97R/nzVfndFyiizp1dxxqynM9rG703IYcvhZdk3OwzK8LOylpt+A8WVXGmxyWxd+Uf/6wizLE718Ziz5dqV684bMapcxK3bzbXfzb028p8aog7YC2monvSkeJX+q3jOL7drmrV2N7+TwOq9tBxlW8/YBNhZ2XdC6+L+OS+KO9+GmUqfix6IR498+q7+NfA4hXo4hZU38r/tR8j1WjMoo/9eOWvhlbaCb7Nuq5fXrefCluxZ+GEf2xXaRb3VV8XV9fHZv6k7naD2FvS3qYJNt/hAs59IO726b+Wv7Jw3mUw7SFH9NcaurdP6uZeF5Tr7rC2XjnVvy5mtf4rkru+yWmA5JZMguvX5/pk7kO7oZKXu2H1bUPruubPOEwuKsmY62hJLNk7wZV9XRzbi5+ofz9w1mUyQrHEtTj2/f1gnj7z2omnjW467/b0825G/FqpYe+w1P/T9cEuo9Krf8P99vx6vP783wTpV+iT6b5WMaq2DWI7TP96toH/xya+uHV9gkVx2Z3yrDgWNJxwevmXPcR3uTQZjjswJlsx8/Lf304RBnjDyscS1BfV7ok3vqzmomflPqIXbaFAvGFAvGFAvGFAvGFYhbfjA/3J6uDHCAjjOLfv36rT2pP8w/2B6qBfIzi3358rU+H7jfYDqjxhWLVxx/Qx28OjOoLBeILxaqptzu4BXLCPLh76Q4NnR3OOwbysdqcm/4G2wA1XstxONK+Ocx9fH+aQZF9vLoc5fRcH+3P2csGjOo1tN3b5YfvW+zmIF6D2mtZn/eb7OYsxZ9sz0zfFt1VlOdglz8KAuILBeILBX28jg3vtbQR//5Sff7nH+/7uUo+vA9Hsw8jdWIW6HOzEP/+cmg2aZaSt/z80sEsoWavZfa5W4hv0l7els0+eRO6Gs+LvAKhavxpg8kbofdaZp+7ZR+/eFOg7JMXGTkUAcR7hhYAxJNAvJHFfRjZ5845Ayf75O0oVPyWR7Z2FCp+y9uyIiOHAjWeBbnXkh05Nuw+Pstt2Y+PD/WLXULXvZa73Y67ylAUOar/6P+zS+i413LX/5cAxHNw3Gu5RfFZDe6CiXfca7lF8e6hUxKqjydBHy+NzngPNudIzNvxT+RZVwKTn2nnl/Dy+Kza+i0eoLLYgfNf1JUk4pK/0R7keLy6pmLhphDicr8jxJ674/JZZ9KSv9Ue4gyc9tT6rAa2A2F22b49LbiXkvzHXU0f4Jawqe7nQ3tNhXXkzQzuNJcPCRE/bLstwC7heAdp68ibEe8fei1iiieB+PRA/CLbFx+xj6eBeNGk2IEjxfymxZNVvQfiSXIWb9IO8RryFW/WDvEashVvoR3iNWQr3gqIJ8lPPL3xdg/Ek2QnXrO75h6IJ4F4PzSRhZiH+ChA/Hr0fbv0Ph7iw+Kg+wrEkwgX/zFWc6/FIZ5EtninDn0BiCeB+OCRIZ4PxPuTtXinIfwCaS6okGE+b/FMIJ4E4sNHhvjkQDwJxIePDPFsWCO7GuI1QHz4yBDPBuL9yVk813si8TLMQ3wUID4mEM8A4qMA8TGBeAYQz4GcTRriI8L2zi4hPZs0xEckuXjNbNIQH5Hk4jWzSesjSzAP8Qzo2aQhPiLpxftGDiKeeV/cfMXzvWctnnsnbIhn4DsDF8RzSC/eez4eiOeQXrz3DFzo4zmkF5+0xnOBeAbeM3AJMJ+t+ADek43qIZ4BxPOAeC4+c8sGGdbzgkA8F4h3DM0E4ssUH8J73n08xPvDL6HnbNIQ740M8a6zSY/wze+YMSCeg+Ns0lcg3hcZ4h1nk74C8Z4E8R6mj/eaYjSEeF4QiI8CxEcC4iGeQYDj8d35ls6RId4TKeK7U+t/7xx5A+Ivj9X+5HNMmoUU8e0M4j6zSbPNpxavLio47deeQz2Md7b4p4dff3n1yz178erbrg5TrDuHugzx7dbcvj77tHZc8dxzLVHj47B98aqPP6zex0N8evHeoTlAfJniA3mHeBqrpt7vFGMGEJ9evPdFBRwgPr1478uIOGxAPNd8cvGo8Z6RcxfvfxkRA4jvFi/tatlQ3jMWv2PHgPgolCLe56ICPbr5pSB+u+K1M8pBPMTzgHiSVH28Tnww70nF88yLEO95GZEeTR8P8TLEe19G5AvEyxDvfRmRLxAvQ7z3ZUS+QPywbPo+3uvcciOEYYgXIt4ztJaP8cfyS2GAeJKk4pcdQ7wI8YzLiHQUIJ6jTYZ438uINHzc/F56LQAQT2Ij3vsyIhqIt1uUEYItnnEZEc3H3R/3LwUA4kmstuN9LyOigXi7RZOK9w2t4WPhL/oZfyCeJLX4e88QP1lSgPiggzuIt1xSgHj30Bo+iL/vH/JIK95f21bFf5APpIn3m1R4IG/xl8dndZQm5J67bMR7Tio8kLV4dSWNyj/kdvyH9SMmTPG+kwoPZC2+SbqdWzfk4C4X8d6TCvdkLV5V9/Ohzd8xNMmtW13Lz4Pb1PtOKtyTt/h+gHPvPYr4oN4xqqdJMarXbbpD/GxBiPeDK557NxBPb7uFv5yRJ167e16UePa9AdjiGeZzEK89aMMhxOZczdiigfgpOvFhvaPG08gQrz0jh0GIzbmkffyWxGtPsBQmnhsZ4idAvMtiWxc/PCtRPOPeABA/oSTxnt42KV57N4TA3iGeBuKjRvbytiP+diMX8fq74njCF8+8GwjEj6xwA5QrbPHcu4FA/EAMvTRs8dy7gUD8QGbiuXcDgfiBzMRz7wYC8QM68bq7nPqRfFTvJW6L4rXeDa97kL94f/MQz+Xy5f7gHE/8bqfVCfFsuCdidEdll47LcsTviOcXFylAvMA+/u2pUR68xhcoft0xfYim/u3p8z8g3i30AvmJV2faLpyAE7OPh3g+WY7qIZ5PevEe4jYofm3vIsUbTUI8H4HizSIhno888bvFZzVLQLwP4sTvFp+1WcIZQeJX956l+OUmwh2ITxuZ2PFO+1xXPHVqGSf0HULFx82dOMYqRDx5ahkn9B0yxcfOfbmWCxFPnlrGCX3L+t6tShg79+W7W1iL9zbvUOMXTi3jhL5FqPjYuS+P54SIJ08t44S+Raj42LkTA3nS57riY4S+Rar4yJGJXTbliE/gXYT4Dvtd9quKp+/8wAh9g1Txa+S+gAzxHYuXhfqHvkGq+I64uS9A+XQ/mkfgID7u5pxs8ZE3ZRcghKYQvzThECP0nBTeHUoYL3fqPCsR4vt+buGG/IzQc8SKj5w7eWalCPFRQs8RKz5y5OLFJwHiSZR4zQUjnNACMJcwfu7kudSWXT9qvAcCajwNxMcD4kl68ae4zV34q+LssCph5NxJbHt+T/N2m3N//Hbe16eF6UcYoa/EuKGVFVabc3FzpxEh/sfX7l/I0Fdki4+buwbqgkqLt1lgdyLG12/Nv8Xrgf1DXxEtPnLuGgSIV9eAn6sq2oEK0X185NxpJIiPEVoAokf1EB8PiCfp9twtTKXIDy0Amz132tx5s0mbsLMcdXD3sjSTJDO0AOzOsqVzZ84mbSK9+Iaz6y4Mx1F9EixLSOXOnU3ahAjx/S2e7rk8VvsTYyamWr54KnfubNIm7pVadvs22IontLfJq91ajPnjk3m3LSGVO3c2aRPpxTf9HNXQq2ZOnYnIaO5ki9fkzoxsxuqITKJR/cZrfNotmsTi9TR9/IHXx0sWr4c7m7QJ0eK9Qw+k887Vw55b1gTER4Kphz2btAm7sy78zIdo6nnNXb7io9d4u+ulIop/+1ll9v7L0rYsN/mE3u2Ox9O5s2eTNpJafFOt9/VxcXzLbu6ki9fkzo1sJrl4tdty+VqSzdf4ms6dH9mE1d0S0tR4dnMnXrypxnPmljWRWryun/MO3ZHSO7uPb4kp3urOOIlG9d6hO8SLN7Jp8aab/PknL1/8Kjd3pEgs3niTvw2L1+fOnE3aSGLxxpv8eYtP6t32vHo6d+5s0mZ25APDsyYcanyMm/zJF6/NnTubtJm04vU3+eM0d/LFa3PnziZtJrF4HZzmLq33AHqYs0mbESye09xlLz565B3xt/lpA1Zn4GjvCsFp7sSLT383kN3in8Q7HLCr8Uc1aqcuFWY0d+LF19rc1dlHx5hH52ob8X7mbTfn6sUDcJzQdXLvtptzNZG7OkB1VNMK+59vaCap+KY1b36G35zLQbwmd/VtOPPOMDaTVHzXmi+39JwzcHIQr8l9OCS93RqvgXM8PrV3tp63J5X8KWofP9EqSjznDJzsxa8SOan4M7lJs/0aT+fOjWxHSvFdk7YM4wycLMTrcudFtmR39wf5DhccNucCh07v3WFzLkZkS1KK73ZiBA6difg4ubuwu/lNvsEJy6be2M95DO7yEJ9oTpoJCcX7sQ3x6SNvTXx67xBPYz46d3l8Vvu23A/SZCE+/dE5qTW+PVDx7LPbMgvxIiLvZr/I190IsOeuvQeQ8+BOgPetiPcyz+7jm+qujlCdXe/1BvHWyBTf391x4fAVxAdiN/mpeYMbyUb1EG/NpsRL8J6L+E4sxIcD4kkgXkLkDYkX4R3iaSBeQmSID0wu4luzEB8OiCeJJF6Gd4ingXgRkXd6uRDvCMSTQLyMyLttiBfiHeJpIF5GZL14H/MJT7ZMTz7iDUC8GxBPAvHSIi8C8W5APEkE8akmi1+ArSfupMITdrvsB3cf9XZG9ZEnFb5i2GUL8Y4w9cSeVPgKxIeFqSf2pMJXtiB+S3185EmFJ2ygj5cERvUkEC8t8iIQ7wa3hLEnFbYG4t3gDu6iTzFqSxbixQztwmzO1ZFvaWoFxLuBGk8C8TqiTypsjbt5iM8s8jIZiBfkHeJpIN5I1ClGbYF4JyCeBOKNQLxd6M2JXznyMhDvBF9P7EmFbZEvXpJ3vp74kwpbAvFOsPXEn1TYEoh3IlCNjzmpsCUQ70SQPj7upMKWQLwTGNWTQLy0yMtAvBMBzsB58Llzd3jEixflPcTxeDX1rADx7uYh3p9O+HEP8ebQmxLfn4Fz+pcvEG8KvSnx9dtTe4BmYVZhiL9hW+JTRCaAeBcgniSweFneIZ4G4qVFJoB4FyCeBOKlRSaAeBcgngTipUUmkC1emHeIp4F4aZEJIN4FiCcxi788VvuT5RWjEB+N1cWrW36d9pbzx0N8PFzNc8WrY9HqIiKrY9IQH4+1xaPGrxyZYm3xqo8/WPbx0rxDPE3QUT3ERwTiHYB4Equm3vYGQBAfkdUHdw63/IL4iKTYnJv+1oWG+IgIrvHivEM8jbmPt7/JH8THRPCoHuJjAvEOQDyJpXirW35BfEwg3gGIJ4F4aZEp5Pbx8rxvSryr+QDiLW/yB/FxWV287U3+ID4uq4u3vckfxMclUY033+Rvi+JXm03agiR9vM1N/jYofrXZpG1YX7xdaIHeuXrWm03aBoi3h6lnvdmkbVhZvPq2d5MqG0JvUPyKs0lbsL74rsX7vSH0FsWniEyyvvj2lHpjPwfxkVlb/NPDr7+8WlxQsUXxYmaTViTYjq+a8Y0x+Q2KlzO3rELoqF6i9yCbc7WIu1fXEO8CajyJtXjTt36L4gXNJq1wM48an1lkGoi3BuJJgu252654EXPLKlYXb7PnTqR3iKcJtecO4uOzsni7PXcbFr9yZJq1B3dWe+62Kl7KbNIKkaP6jYoXM5u0AuKtYesRM5u0AuKtCVTjBcwmrZAoXqb3MH28iNmkFRBvDUb1JBAvLTINxFsD8SQQLy0yDcRbwz0Dpzscv3RAPoV4N/OriBfqna1HTR4fJ7IXEG8LfwfOwt7aMJF9gHhbttXHQ7w1EE8C8dIia4B4WyCeJIh4qd4hngbipUXWAPG2QDwJxEuLrAHibYF4EoiXFlkDxNsC8SQhxIv1XoD43Y76NkB8ZpE13DveLT7bAvGZRdZx5xjil4F4EoiXFlnHQluPPn6J7YuniS9erneIp4F4aZF17DSPboH4zCLrmKomO/ceiM8sso6ra5P21a6WlcnWxI9YdPYQn1lkC8zVvYb47CKbsRvbQ3xmkUMRW/zHBwZ3q0Hvp7snsviPWvKwfmPiNXvm74H4zCJrgHhbIJ4Efby0yDoE9fGy2Zp4FyA+s8ihgPjMIocC4jOLHAqIzyxyKCA+s8ihgPjMIocC4jOLHAqIzyxyKCA+s8ihgPjMIocipnj5MLLbeO4c8SBjIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QmOIvj1X1bH7b+4v5Te8v1QMxket8hfdTO9++58trOxP05+/mkjHIO3eeeDXn7uXfzEU+WXxCx+f6bCyuWuHJ8K6z+njUx33aG1fKIPPceeLPKvzRmNjldz8Z3/P2o+nL3Eb64bvpnceHvzbfevWm9tsfjcxz5/fx5EzbI+9ffzU3d5cf/tOiubP51rdJt5+SsWRcMs6dLf795WB6y+lg0c9dHp/bEhuw6b5U8qrljC4+59y54t+ejLk3Kdkkb1VFVad6No1w1qrxWefOHtWbRy6n9ixv02f09rNN8lZf5ssqfXzmufPE2+SusNmkOdo0d9bfetUKxx3VZ547T3z3hbbZTjW/p+nBjFupanvFPAxaZzs+89yx565QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIL5QIonvTkFdPsdXc9nR+8v1VOS7hSOfLR2MPHKPJl6dNeqc/HSBjMXnkHss8V/+tm+L217Z8eX1/etfqupwbq8tOP6pPSu5O6X48ruf2hOL20fNj/b84fb3dWF1XnH7Yv+jW6h9Mk7peeSRezTxr+oigWvyL/umJuzbVI6fv7e/2rP+h8sSmkfn7vnuTPTz53+MC6srQ079suNC/ZMCySP3eOLffv4+/dZ/q9V/dQmQau6Oz+qvJoG+DVOpNM90j8afQ/LddUP9X/1C8S+F9SWP3OOJr0+H5eT/+1ub/FNVdY3a8P7m9T7t9mqiSXN3eVTNoEp+slD3pEDyyD2i+Pevf6W+9U2D1l/ib/OtV2/o2sL5QhZ3kUhBHrlHFN8Ob9ur+T/Nkx+7rLFnu+/nLl/+/mVYWOV4HjvH/q/+yTjFZ5FH7jHFq4Krawv/8OM8+T+17VQ3jB2S74esfR3oR7b9wvWx6m7tMox927cd5Y7qc8gde+4KBeILBeILBeILBeILBeILBeILBeILBeILBeILBeILBeILBeILBeILBeILBeILBeILBeIL5f8BCfldCnas7aoAAAAASUVORK5CYII=" alt="plot of chunk unnamed-chunk-5"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfgAAAH4CAMAAACR9g9NAAAAmVBMVEX9/v0AAAAAADkAAGUAAP8AOTkAOWUAOY8AZo8AZrU5AAA5ADk5AGU5OWU5OY85ZrU5j485j9plAABlADllAGVlOQBlOY9lZjllZmVltbVltf2POQCPOTmPOWWPZgCPj2WPtY+P29qP2/21ZgC1Zjm1tWW124+1/tq1/v3ajzna24/a/rXa/v39tWX924/9/rX9/tr9/v3/AADBAzrjAAAAM3RSTlP/////////////////////////////////////////////////////////////////AP/PuK9xAAAACXBIWXMAAAsSAAALEgHS3X78AAATaUlEQVR4nO2dDXujxhVGi+2ta3WziRwnTa1Nm1hNa7XWB/v/f1yZAUkguDAwX3fmvudJbMuSXs3lwDCDgf1TCUTyp9gNAHGAeKFAvFAgXigQLxSIFwrECwXihQLxQoF4oUC8UCBeKBAvFIgXCsQLBeKFAvFCgXihQLxQIF4oEC8UiBcKxAsF4oUC8UKJIf74XChe1U/377fPPX5EaBKJauuMFp2bf1PiYVXcvekvjpp1zrp+Tv2p5oszovhiPfgcK/F1U59mvL4j/lziVqnZnv044Jw1tijb7ekTR7xaMffF/bv66bS5/6Mo1G9Om6L4u27prl6LDyv1tMPlNZvD6vGjbm7TJN1IvV3t6uU91PybEv9TPVH8+adC9x1Nzmlz9ze10V4etlMu+a+6Cc0vysuHqtfU/dD1c86faro444lXa23d0qLeqpofqpZuz2tx9ZL9jO3NPdVSr5fTuUl1I6v2b7utbjf/tsS2+E7OzcNryiV/3WzTzXbbfOit+HMHMGdxRhS/u4hfV+vs44daIatfqh+q1lZr7nv1yk+r291WUPTS0zvppkm6kdUCPKyqzfX4fPfWb36/xGtXf8mp3vZUdh62UnT+5QOvnfXlQ1td/flzzo9MFycH8bqaxw+9MtY/aNToZV/E7OgVW23+0qR9szutt5yqhH7z1dOU+EuOftvNwzrlnN88o7f4xtblQ0fFmy1ODl29XheHW7qjxy3BUN19S3zdVbbE3zZfPd0t0UR8O6VsPaP38c10gBTf6erNFieLwV3d0m7fpDms/rJxNgVawk4tvXPPW7dIN3Ld6upvm69e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" alt="plot of chunk unnamed-chunk-5"> </p>
+
+<pre><code class="r">table(nc$Best.n[1, ])
+barplot(table(nc$Best.n[1, ]))
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-5"> </p>
+
+<p>A 4 cluster solution was decided. Let&#39;s see the characteristics of these clusters using a parallel coordinates plot. For the purposes of this plot, we&#39;ll label MurderNonNegligentManslaughter as just MurderSlaughter.</p>
+
+<pre><code class="r">set.seed(123)
+kmeansdata = kmeans(cData[, -1], 4)  # generating 4 clusters 
+meanvars = aggregate(cData[, -1], by = list(kmeansdata$cluster), FUN = mean)  # get cluster means 
+names(meanvars) = c(&quot;Group&quot;, &quot;ViolentCrime&quot;, &quot;MurderSlaughter&quot;, &quot;ForcibleRape&quot;, 
+    &quot;Robbery&quot;, &quot;AggravatedAssault&quot;, &quot;PropertyCrime&quot;, &quot;Burglary&quot;, &quot;LarcenyTheft&quot;, 
+    &quot;MotorVehicleTheft&quot;)
+parrstates = rCharts$new()
+parrstates$field(&quot;lib&quot;, &quot;parcoords&quot;)
+parrstates$set(padding = list(top = 25, left = 5, bottom = 10, right = 0), width = 1080, 
+    height = 300)
+parrstates$set(data = toJSONArray(meanvars, json = F), colorby = &quot;ViolentCrime&quot;, 
+    range = range(meanvars$ViolentCrime), colors = c(&quot;red&quot;, &quot;blue&quot;))
+parrstates$setLib(&quot;parcoords&quot;)
+</code></pre>
+
+<iframe src="https://dl.dropboxusercontent.com/u/56796392/USCrime2012/parrstates.html" width=1100 height=350> </iframe>
+
+<p>The parallel coordinates plot shows the average (mean) rate of crimes for different groups of States. 
+Group 4 States: Highest crime rates for all crimes except forcible rape, where its average trails States from Group 2. 
+Group 3 States: Second highest crime rates (after Group 4) in Property Crime, Burglary, Larceny Theft, and Motor Vehicle Theft. Lower crime rates (third highest in other categories of crimes, and in fact has the lowest Aggravated Assault rate.
+Group 2 States: Highest crime rate for forcible rape, second highest crime rates (after Group 4) in Violent Crime, Murder and Nonnegligent Manslaughter, Robbery and Aggravated Assault. Third highest (after Group 4 and Group 3) in Property Crime, Burglary, Larceny Theft, and Motor Vehicle Theft.
+Group 1 States: The safest of the lot with least crime rates in all categories except Aggravated Assault, where it is slightly above Group 3 States. </p>
+
+<p>In terms of overall safety, States could be potentially be rank in the following manner. Group 1 the safest, followed by Group 3, then Group 2, and lastly Group 4. (The nature of crimes Group 3 is second highest in are less dangerous than the crimes for which Group 2 is second highest in.) When a 3 group solution was attempted using the previously used k-means cluster analysis, States belonging to Group 3 collapsed with States belonging to Group 4. The distinction between crimes in this separate group and others was important enough to warrant a separate group. </p>
+
+<h4>Let&#39;s identify States based on their group membership and color code them.</h4>
+
+<p>Green for group 1 (the safest among the three groups), a lighter shade of green for group 3 (the second most safe group), a shade of orange for group 2 and red for group 4 States.</p>
+
+<pre><code class="r">cDataclust = data.frame(cData, kmeansdata$cluster)  # append cluster assignment
+names(cDataclust) = c(&quot;State&quot;, &quot;ViolentCrime&quot;, &quot;MurderNonNegligentManslaughter&quot;, 
+    &quot;ForcibleRape&quot;, &quot;Robbery&quot;, &quot;AggravatedAssault&quot;, &quot;PropertyCrime&quot;, &quot;Burglary&quot;, 
+    &quot;LarcenyTheft&quot;, &quot;MotorVehicleTheft&quot;, &quot;CrimeLevelGroup&quot;)
+# plotting states by cluster number - a dimple plot
+stategpplot = dPlot(x = &quot;State&quot;, y = &quot;CrimeLevelGroup&quot;, data = cDataclust, type = &quot;bar&quot;, 
+    height = 475, width = 700, bounds = list(x = 50, y = 10, width = 600, height = 300))
+stategpplot$yAxis(type = &quot;addCategoryAxis&quot;)
+stategpplot$xAxis(type = &quot;addCategoryAxis&quot;, orderRule = &quot;CrimeLevelGroup&quot;)
+stategpplot$colorAxis(type = &quot;addColorAxis&quot;, colorSeries = &quot;CrimeLevelGroup&quot;, 
+    palette = c(&quot;green&quot;, &quot;#fc8d62&quot;, &quot;#b2df8a&quot;, &quot;red&quot;))
+# stategpplot$save(&#39;stategpplot.html&#39;,cdn=T)
+# stategpplot$publish(&#39;stategpplot&#39;,host=&#39;gist&#39;)
+</code></pre>
+
+<iframe src="http://www.pagist.info/7968157" width=1000 height=500> </iframe>
+
+<p>Lastly, a choropleth.</p>
+
+<pre><code class="r">library(stringr)
+cDataclust = mutate(cDataclust, State = str_trim(State), state = state.abb[match(State, 
+    state.name)])  # Adding a column of abbreviated state names    
+choropleth3 &lt;- function(x, data, colors, map = &quot;usa&quot;, ...) {
+    # Uses DataMaps through rCharts
+    fml = lattice::latticeParseFormula(x, data = data)
+    data = transform(data, fillKey = fml$left)
+    d &lt;- Datamaps$new()
+    d$set(scope = map, fills = as.list(colors), data = dlply(data, fml$right.name), 
+        ...)
+    return(d)
+}
+choroChart = choropleth3(CrimeLevelGroup ~ state, data = cDataclust, colors = c(&quot;&quot;, 
+    &quot;green&quot;, &quot;#fc8d62&quot;, &quot;#b2df8a&quot;, &quot;red&quot;))
+# choroChart$save(&#39;choroChart.html&#39;,cdn=T)
+# choroChart$publish(&#39;choroChart&#39;,host=&#39;gist&#39;)
+</code></pre>
+
+<iframe src="http://www.pagist.info/7968165" width=1000 height=475> </iframe>
+
+    </div>
+        
+</body>
+  <script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/bootstrap/js/vendor/bootstrap.min.js"></script>
+  <script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/bootstrap/js/plugins.js"></script>
+  <script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/bootstrap/js/main.js"></script>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>

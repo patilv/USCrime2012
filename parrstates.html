@@ -1,0 +1,109 @@
+<!doctype HTML>
+<meta charset = 'utf-8'>
+<html>
+  <head>
+    <link rel='stylesheet' href='parcoords/external/d3.parcoords.css'>
+    
+    <script src='parcoords/external/d3.min.js' type='text/javascript'></script>
+    <script src='parcoords/external/d3.parcoords.js' type='text/javascript'></script>
+    
+    <style>
+    .rChart {
+      display: block;
+      margin-left: auto; 
+      margin-right: auto;
+      width: 1080px;
+      height: 300px;
+    }  
+    </style>
+    
+  </head>
+  <body>
+    <div id='chart1bb0779c4e10' class='rChart parcoords'></div>  
+    
+    <script id="brushing">
+var params = {
+ "dom": "chart1bb0779c4e10",
+"width":   1080,
+"height":    300,
+"padding": {
+ "top":     25,
+"left":      5,
+"bottom":     10,
+"right":      0 
+},
+"data": [
+ {
+ "Group": 1,
+"ViolentCrime":  272.2,
+"MurderSlaughter":      3,
+"ForcibleRape": 27.893,
+"Robbery": 60.714,
+"AggravatedAssault": 180.61,
+"PropertyCrime": 2164.1,
+"Burglary": 450.21,
+"LarcenyTheft": 1592.7,
+"MotorVehicleTheft": 121.26 
+},
+{
+ "Group": 2,
+"ViolentCrime": 346.03,
+"MurderSlaughter": 4.2133,
+"ForcibleRape": 33.967,
+"Robbery":  92.64,
+"AggravatedAssault": 215.19,
+"PropertyCrime": 2644.1,
+"Burglary": 580.46,
+"LarcenyTheft": 1845.6,
+"MotorVehicleTheft": 218.05 
+},
+{
+ "Group": 3,
+"ViolentCrime":  282.1,
+"MurderSlaughter": 3.0333,
+"ForcibleRape":   29.4,
+"Robbery": 76.667,
+"AggravatedAssault":    173,
+"PropertyCrime": 3096.8,
+"Burglary": 643.77,
+"LarcenyTheft": 2229.2,
+"MotorVehicleTheft": 223.93 
+},
+{
+ "Group": 4,
+"ViolentCrime":  466.5,
+"MurderSlaughter": 5.9733,
+"ForcibleRape": 31.033,
+"Robbery": 107.57,
+"AggravatedAssault": 321.94,
+"PropertyCrime":   3478,
+"Burglary": 895.98,
+"LarcenyTheft": 2341.1,
+"MotorVehicleTheft": 240.92 
+} 
+],
+"colorby": "ViolentCrime",
+"range": [  272.2,  466.5 ],
+"colors": [ "red", "blue" ],
+"id": "chart1bb0779c4e10" 
+}
+var getColors = d3.scale.linear()
+  .domain(params.range)
+  .range(params.colors)
+  .interpolate(d3.interpolateLab);
+
+var color = function(d) { return getColors(d[params.colorby]); };
+
+  d3.parcoords()("#" + params.dom)
+    .margin(params.padding)
+    .data(params.data)
+    .color(color)
+    .alpha(0.4)
+    .render()
+    .shadows()
+    .brushable()  // enable brushing
+    .reorderable(); // enable moving axes
+</script>
+    
+  </body>
+</html>
